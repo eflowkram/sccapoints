@@ -40,4 +40,4 @@ Execute `pip install -r requirements.txt`  this will install any required module
 ## To Do
 Utilize file output to csv, possibly add pdf output.  
 streamline code, refactor bits of it.  
-
+Get debug switch working.
