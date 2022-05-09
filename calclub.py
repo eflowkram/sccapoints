@@ -1,6 +1,3 @@
-ct = 12
-
-
 def points_card(number):
     n = number
     if n >= 600 and n < 700:

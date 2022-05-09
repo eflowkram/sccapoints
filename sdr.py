@@ -1,6 +1,3 @@
-ct = 10
-
-
 def points_card(number):
     n = number
     if n < 1000:

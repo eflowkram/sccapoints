@@ -19,10 +19,11 @@ config = ConfigParser()
 config.read("config.ini")
 # get the club name and use it to pull in modules
 club = config.get("region", "club")
+CT = config.get("region","CT") 
 # importlib will let you use import_module but it is imported into it's own namespace so we move the fuctions to global NS.
 ns = importlib.import_module(club)
 calc_points = ns.calc_points
-CT = ns.ct
+
 points_card = ns.points_card
 calc_drops = ns.calc_drops
 
@@ -349,7 +350,7 @@ def class_point_parser(soup, event_date):
         if car_class in non_points:
             continue
         car_number = int(item[2])
-        if car_number >= 1000:
+        if not points_card:
             continue
         position = first_element.replace("T", "")
         if item[CT] in ["DNS", "DNF"]:
