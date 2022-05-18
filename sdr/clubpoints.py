@@ -1,1 +1,0 @@
-../clubpoints.py

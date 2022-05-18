@@ -29,7 +29,6 @@ calc_drops = ns.calc_drops
 
 database_name = f"{club}_points.db"
 non_points = ["TO", "X"]
-global DEBUG
 DEBUG = False
 
 class_results_table = """
@@ -145,10 +144,11 @@ def event_dates():
 
 def update_average_points(driver_id, car_class):
     sum_points = float()
-    sql = f"SELECT points from class_results where class = '{car_class}' and driver_id = '{driver_id}' and national = 0"
+    sql = f"SELECT points from class_results where class = '{car_class}' and driver_id = '{driver_id}' and national = 0 and points > 0"
     points = execute_read_query(db_conn, sql)
     points_count = len(points)
-    print(driver_id)
+    if DEBUG:
+      print(driver_id)
     for n in points:
         sum_points += n[0]
     avg_points = sum_points / points_count
@@ -173,6 +173,7 @@ def total_class_points(driver_id, car_class):
     sql = f"select points from class_results where driver_id={driver_id} and class='{car_class}'"
     class_points_results = execute_read_query(db_conn, sql)
     drops = calc_drops(len(class_points_results))
+    print(f"driver_id: {driver_id} drops: {drops}")
     if DEBUG:
         print(f"number of events: {len(class_points_results)} drops: {drops}")
     count = len(class_points_results) - drops
@@ -418,6 +419,27 @@ def driver_point_parser(soup, event_date):
         execute_query(db_conn, sql)
     return
 
+def missed_events(driver_id,car_class):
+    """
+    this function will insert a zero point result into the class and pax results tables for missed events
+    """
+    ed = event_dates()
+    for d in ed:
+      sql = f"SELECT count(1) from class_results where driver_id={driver_id} and class='{car_class}' and event_date = '{d}'"
+      results = execute_read_query(db_conn, sql)
+      if results[0][0] == 0:
+        print(f"no event found for driver id: {driver_id} class: {car_class} date: {d} creating entry.")
+        sql = f"INSERT into class_results VALUES (NULL,'{d}',{driver_id},'{car_class}',0,0,0,0,0,0)"
+        results = execute_query(db_conn, sql)
+      # do it for Pax
+      sql = f"SELECT count(1) from driver_results where driver_id={driver_id} and event_date = '{d}'"
+      results = execute_read_query(db_conn, sql)
+      if results[0][0] == 0:
+        print(f"no pax event found for driver id: {driver_id} date: {d} creating entry.")
+        sql = f"INSERT into driver_results VALUES (NULL, '{d}',{driver_id},NULL,0,0,0,0)"
+        results = execute_query(db_conn, sql)
+    return
+
 
 def generate_points():
     """
@@ -440,6 +462,7 @@ def generate_points():
         driver_class_results = execute_read_query(db_conn, sql)
         for c in driver_class_results:
             car_class = c[0]
+            missed_events(driver_id,car_class)
             update_average_points(driver_id, car_class)
             total_points = total_class_points(driver_id, c[0])
             sql = f"SELECT sum(cones), sum(dnf) from class_results where driver_id={driver_id} and class='{car_class}'"
@@ -518,6 +541,7 @@ def main():
         required=False,
     )
     args = argparser.parse_args()
+    global DEBUG
     DEBUG = args.debug
     db_init()
 
