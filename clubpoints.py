@@ -19,7 +19,7 @@ config = ConfigParser()
 config.read("config.ini")
 # get the club name and use it to pull in modules
 club = config.get("region", "club")
-CT = config.get("region","CT") 
+CT = int(config.get("region","CT"))
 # importlib will let you use import_module but it is imported into it's own namespace so we move the fuctions to global NS.
 ns = importlib.import_module(club)
 calc_points = ns.calc_points
@@ -148,6 +148,7 @@ def update_average_points(driver_id, car_class):
     sql = f"SELECT points from class_results where class = '{car_class}' and driver_id = '{driver_id}' and national = 0"
     points = execute_read_query(db_conn, sql)
     points_count = len(points)
+    print(driver_id)
     for n in points:
         sum_points += n[0]
     avg_points = sum_points / points_count
@@ -330,8 +331,6 @@ def class_standings(driver_id, car_class):
 
 
 def class_point_parser(soup, event_date):
-    event_date = event_date
-    soup = soup
     class_table = soup.find_all("table")[2]
     # = [[cell.text.strip() for cell in row.find_all(["th","td"])]
     #                        for row in class_table.find_all("tr")]i
@@ -350,8 +349,6 @@ def class_point_parser(soup, event_date):
         if car_class in non_points:
             continue
         car_number = int(item[2])
-        if not points_card:
-            continue
         position = first_element.replace("T", "")
         if item[CT] in ["DNS", "DNF"]:
             continue
@@ -362,25 +359,24 @@ def class_point_parser(soup, event_date):
         driver = item[3].replace("'", "")
         points = calc_points(winner_time, float(final_time))
         cones, dnf = get_cone_dnf(item)
-        print(
-            f"Event Date: {event_date} Position: {position} Class: {car_class} Car No: {car_number} Driver: {driver} Points: {points} Cones: {cones} DNF: {dnf}"
-        )
-        # Create driver record if it doesn't exist
-        sql = f"SELECT id from drivers where car_number = '{car_number}'"
-        driver_results = execute_read_query(db_conn, sql)
-        if len(driver_results) == 0:
+        if points_card(car_number):
+          print(
+              f"Event Date: {event_date} Position: {position} Class: {car_class} Car No: {car_number} Driver: {driver} Points: {points} Cones: {cones} DNF: {dnf}"
+          )
+          # Create driver record if it doesn't exist
+          sql = f"SELECT id from drivers where car_number = '{car_number}'"
+          driver_results = execute_read_query(db_conn, sql)
+          if len(driver_results) == 0:
             sql = f"INSERT into drivers VALUES (NULL,'{driver}',{car_number})"
             driver_id = execute_query(db_conn, sql)
-        else:
+          else:
             driver_id = driver_results[0][0]
-        sql = f"INSERT INTO class_results VALUES (NULL,'{event_date}',{driver_id},'{car_class}',{position},{final_time},{points},{cones},{dnf},0)"
-        execute_query(db_conn, sql)
+          sql = f"INSERT INTO class_results VALUES (NULL,'{event_date}',{driver_id},'{car_class}',{position},{final_time},{points},{cones},{dnf},0)"
+          execute_query(db_conn, sql)
     return
 
 
 def driver_point_parser(soup, event_date):
-    event_date = event_date
-    soup = soup
     pax_table = soup.find_all("table")[1]
     # = [[cell.text.strip() for cell in row.find_all(["th","td"])]
     #                        for row in class_table.find_all("tr")]i
@@ -526,8 +522,12 @@ def main():
     db_init()
 
     if args.url:
-        r = requests.get(args.url)
-        soup = BeautifulSoup(r.content, "html.parser")
+        if args.url.startswith('http'):
+          r = requests.get(args.url)
+          link = r.content
+        else:
+          link = open(args.url)
+        soup = BeautifulSoup(link, "html.parser")
         table_count = len(soup.find_all("table"))
         event_date = get_event_date(soup.find_all("table")[0])
         print(f"ed: {event_date}")

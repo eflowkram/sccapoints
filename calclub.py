@@ -1,6 +1,5 @@
 def points_card(number):
-    n = number
-    if n >= 600 and n < 700:
+    if number >= 600 and number < 700:
         return False
     return True
 
