@@ -43,7 +43,7 @@ CREATE TABLE class_results (
     cones int(10),
     dnf int(10),
     national BOOLEAN DEFAULT 0 CHECK (national IN (0, 1)),
-    unique (event_date,driver_id)
+    unique (event_date,driver_id,class)
 );
 """
 
@@ -173,7 +173,6 @@ def total_class_points(driver_id, car_class):
     sql = f"select points from class_results where driver_id={driver_id} and class='{car_class}'"
     class_points_results = execute_read_query(db_conn, sql)
     drops = calc_drops(len(class_points_results))
-    print(f"driver_id: {driver_id} drops: {drops}")
     if DEBUG:
         print(f"number of events: {len(class_points_results)} drops: {drops}")
     count = len(class_points_results) - drops
@@ -592,6 +591,8 @@ def main():
         else:
             print("Records Found, updating average")
             driver_id = results[0][1]
+            sql = f"UPDATE class_results set national = 1 where driver_id = {driver_id} and class = '{car_class}' and event_date = '{event_date}'"
+            results = execute_query(db_conn, sql)
             update_average_points(driver_id, car_class)
 
     if args.generate:
