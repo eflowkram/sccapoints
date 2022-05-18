@@ -43,6 +43,7 @@ CREATE TABLE class_results (
     cones int(10),
     dnf int(10),
     national BOOLEAN DEFAULT 0 CHECK (national IN (0, 1)),
+    missed BOOLEAN DEFAULT 0 CHECK (missed IN (0, 1)),
     unique (event_date,driver_id,class)
 );
 """
@@ -77,6 +78,7 @@ CREATE TABLE driver_results (
     final_time decimal(10,3),
     points decimal(10,3),
     national BOOLEAN DEFAULT 0 CHECK (national IN (0, 1)),
+    missed BOOLEAN DEFAULT 0 CHECK (missed IN (0, 1)),
     unique (event_date,driver_id)
 );
 """
@@ -144,7 +146,11 @@ def event_dates():
 
 def update_average_points(driver_id, car_class):
     sum_points = float()
-    sql = f"SELECT points from class_results where class = '{car_class}' and driver_id = '{driver_id}' and national = 0 and points > 0"
+    sql = f"SELECT count(1) from class_results where driver_id = {driver_id} and national = 1"
+    results = execute_read_query(db_conn, sql)
+    if results[0][0] == 0:
+      return
+    sql = f"SELECT points from class_results where class = '{car_class}' and driver_id = '{driver_id}' and national = 0 and missed = 0"
     points = execute_read_query(db_conn, sql)
     points_count = len(points)
     if DEBUG:
@@ -156,7 +162,7 @@ def update_average_points(driver_id, car_class):
     sql = f"UPDATE class_results set points = {avg_points} where  class = '{car_class}' and driver_id = '{driver_id}' and national = 1"
     execute_query(db_conn, sql)
     sum_driver_points = float()
-    sql = f"SELECT points from driver_results where driver_id = '{driver_id}' and national = 0"
+    sql = f"SELECT points from driver_results where driver_id = '{driver_id}' and national = 0 and missed = 0"
     driver_points = execute_read_query(db_conn, sql)
     points_count = len(driver_points)
     for n in driver_points:
@@ -188,7 +194,7 @@ def total_class_points(driver_id, car_class):
 
 def total_driver_points(driver_id):
     rp = []
-    sql = f"select points from driver_results where driver_id={driver_id}"
+    sql = f"select points from driver_results where driver_id={driver_id} and missed=0"
     driver_points_results = execute_read_query(db_conn, sql)
     drops = calc_drops(len(driver_points_results))
     if DEBUG:
@@ -221,11 +227,14 @@ def table_data(table_handle):
 def get_event_date(table_handle):
     date_mask = "\\d{2}-\\d{2}-\\d{4}"
     header_data = table_data(table_handle)
+    event_date = None
     for l in header_data:
         result = re.search(date_mask, str(l))
         if result is not None:
-            return result.group()
-
+            event_date=result.group()
+    if event_date is None:
+        sys.exit('Event Date not found!')
+    return event_date
 
 def get_cone_dnf(table_row):
     tr = table_row
@@ -371,7 +380,7 @@ def class_point_parser(soup, event_date):
             driver_id = execute_query(db_conn, sql)
           else:
             driver_id = driver_results[0][0]
-          sql = f"INSERT INTO class_results VALUES (NULL,'{event_date}',{driver_id},'{car_class}',{position},{final_time},{points},{cones},{dnf},0)"
+          sql = f"INSERT INTO class_results VALUES (NULL,'{event_date}',{driver_id},'{car_class}',{position},{final_time},{points},{cones},{dnf},0,0)"
           execute_query(db_conn, sql)
     return
 
@@ -414,7 +423,7 @@ def driver_point_parser(soup, event_date):
             driver_id = execute_query(db_conn, sql)
         else:
             driver_id = driver_results[0][0]
-        sql = f"INSERT INTO driver_results VALUES (NULL,'{event_date}',{driver_id},'{car_class}',{position},{final_time},{points},0)"
+        sql = f"INSERT INTO driver_results VALUES (NULL,'{event_date}',{driver_id},'{car_class}',{position},{final_time},{points},0,0)"
         execute_query(db_conn, sql)
     return
 
@@ -428,14 +437,14 @@ def missed_events(driver_id,car_class):
       results = execute_read_query(db_conn, sql)
       if results[0][0] == 0:
         print(f"no event found for driver id: {driver_id} class: {car_class} date: {d} creating entry.")
-        sql = f"INSERT into class_results VALUES (NULL,'{d}',{driver_id},'{car_class}',0,0,0,0,0,0)"
+        sql = f"INSERT into class_results VALUES (NULL,'{d}',{driver_id},'{car_class}',0,0,0,0,0,0,1)"
         results = execute_query(db_conn, sql)
       # do it for Pax
       sql = f"SELECT count(1) from driver_results where driver_id={driver_id} and event_date = '{d}'"
       results = execute_read_query(db_conn, sql)
       if results[0][0] == 0:
         print(f"no pax event found for driver id: {driver_id} date: {d} creating entry.")
-        sql = f"INSERT into driver_results VALUES (NULL, '{d}',{driver_id},NULL,0,0,0,0)"
+        sql = f"INSERT into driver_results VALUES (NULL, '{d}',{driver_id},NULL,0,0,0,0,1)"
         results = execute_query(db_conn, sql)
     return
 
@@ -464,7 +473,7 @@ def generate_points():
             missed_events(driver_id,car_class)
             update_average_points(driver_id, car_class)
             total_points = total_class_points(driver_id, c[0])
-            sql = f"SELECT sum(cones), sum(dnf) from class_results where driver_id={driver_id} and class='{car_class}'"
+            sql = f"SELECT sum(cones), sum(dnf) from class_results where driver_id={driver_id} and class='{car_class}' and missed=0"
             result = execute_read_query(db_conn, sql)
             cones, dnf = result[0]
             sql = f"INSERT into class_points values (NULL,{driver_id},'{car_class}',{total_points},{cones},{dnf})"
