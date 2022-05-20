@@ -627,7 +627,7 @@ def main():
 
     if args.print_points:
         if args.file:
-            fh = open(args.file, "a+")
+            fh = open(args.file, "w")
         else:
             fh = None
         generate_points()
@@ -677,7 +677,7 @@ def main():
 
     if args.driver:
         if args.file:
-            fh = open(args.file, "a+")
+            fh = open(args.file, "w")
         else:
             fh = None
         generate_points()
