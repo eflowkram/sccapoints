@@ -501,6 +501,7 @@ def main():
         required=False,
     )
     argparser.add_argument(
+        "-f",
         "--file",
         help="Name of output file to write to",
         action="store",

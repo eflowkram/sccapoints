@@ -30,11 +30,11 @@ Execute `pip install -r requirements.txt`  this will install any required module
 `-u/--url`  Url to webscrape<br>
 `-g/--generate` Used to update the results table with the class data and drivers data.<br>
 `-p/--print` Prints class results as text.<br>
-`-n/--national` Accepts a car number along with event date and class, this is for people who have attened a national event and are awarded the average score of their local events for that missed event.<br>
+`-n/--national` Accepts a car number along with event date and class, this is for people who have attended a national event and are awarded the average score of their local events for that missed event.<br>
 `-d/--date` Date input in the format of MM-DD-YYYY.<br>
 `-c/--class` Car Class ie.  CS, PAX, M1.<br>
 `--driver` Output the driver pax standings.<br>
-`-f/--filename` Filename for CSV output file, defaults to "results.csv"
+`-f/--file` Filename for CSV output file, defaults to None 
 
 
 ## To Do
