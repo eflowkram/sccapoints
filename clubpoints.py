@@ -501,15 +501,6 @@ def main():
         required=False,
     )
     argparser.add_argument(
-        "-f",
-        "--file",
-        help="Name of output file to write to",
-        action="store",
-        dest="file",
-        default=None,
-        required=False,
-    )
-    argparser.add_argument(
         "-n",
         "--national",
         help="car number for national",
@@ -546,7 +537,13 @@ def main():
         required=False,
     )
     argparser.add_argument(
-        "-f", "--filename", help="CSV Filename", default="results.csv", required=False
+        "-f",
+        "--file",
+        help="Output Filename",
+        action="store",
+        dest="file",
+        default=None,
+        required=False,
     )
     argparser.add_argument(
         "--driver",
