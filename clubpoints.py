@@ -662,7 +662,7 @@ def main():
                 elif args.output == "csv":
                     for i in ep:
                         epoints += f"{i},"
-                    line1 = f"{p},'{row[0]}',{row[1]},'{row[2]}',"
+                    line1 = f"{p},{row[0]},{row[1]},{row[2]},"
                     line2 = f"{row[3]},{row[4]},{row[5]}"
                     print(line1, epoints, line2, sep="", file=fh)
                 p += 1
