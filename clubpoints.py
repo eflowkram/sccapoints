@@ -189,7 +189,7 @@ def total_class_points(driver_id, car_class):
 
 def total_driver_points(driver_id):
     rp = []
-    sql = f"select points from driver_results where driver_id={driver_id} and missed=0"
+    sql = f"select points from driver_results where driver_id={driver_id}"
     driver_points_results = execute_read_query(db_conn, sql)
     drops = calc_drops(len(driver_points_results))
     if DEBUG:
