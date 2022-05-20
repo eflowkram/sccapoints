@@ -20,6 +20,9 @@ config.read("config.ini")
 # get the club name and use it to pull in modules
 club = config.get("region", "club")
 CT = int(config.get("region","CT"))
+non_points = config.get("region","non_points")
+non_points = non_points.split(',')
+
 # importlib will let you use import_module but it is imported into it's own namespace so we move the fuctions to global NS.
 ns = importlib.import_module(club)
 calc_points = ns.calc_points
@@ -28,7 +31,7 @@ points_card = ns.points_card
 calc_drops = ns.calc_drops
 
 database_name = f"{club}_points.db"
-non_points = ["TO", "X"]
+
 DEBUG = False
 
 class_results_table = """
