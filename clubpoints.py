@@ -364,7 +364,7 @@ def class_point_parser(soup, event_date):
         if position == "1":
             winner_time = float(item[CT])
             print(f"winner_time: {winner_time}")
-        driver = item[3].replace("'", "")
+        driver = item[3].replace("'", "").title()
         points = calc_points(winner_time, float(final_time))
         cones, dnf = get_cone_dnf(item)
         if points_card(car_number):
@@ -406,7 +406,7 @@ def driver_point_parser(soup, event_date):
         if position == "1":
             winner_time = float(item[8])
             print(f"winner_time: {winner_time}")
-        driver = item[3].replace("'", "")
+        driver = item[3].replace("'", "").title()
         if item[6] == "DNF":
             points = 70
         else:
@@ -578,7 +578,6 @@ def main():
         if table_count == 4:
             class_point_parser(soup, event_date)
         elif table_count == 3:
-            class_table = soup.find_all("table")[2]
             table = soup.find_all("table")[1]
             if len(table_data(table)) < 5:
                 class_point_parser(soup, event_date)
@@ -650,9 +649,9 @@ def main():
                 for i in h:
                     h_string += f"{i},"
                 print(h_string[:-1], sep="", file=fh)
-            for l in results:
+            for line in results:
                 epoints = ""
-                row, ep = class_standings(l[0], c)
+                row, ep = class_standings(line[0], c)
                 if DEBUG:
                     print(row, ep)
                 if args.output == "text":
