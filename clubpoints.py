@@ -127,14 +127,6 @@ def execute_read_query(connection, query):
         print(f"The error '{e}' occurred")
 
 
-def event_count():
-    # find number of events
-    sql = f"select count(distinct event_date) from class_results"
-    results = execute_read_query(db_conn, sql)
-    event_count = results[0][0]
-    return event_count
-
-
 def event_dates():
     event_d = []
     sql = f"select distinct event_date from class_results"
@@ -270,7 +262,6 @@ def db_init():
 
 
 def class_header_text(event_c):
-    event_c = event_c
     e = ""
     for i in range(1, event_c + 1):
         e += f"{'Event '}{i : <5}"
@@ -283,7 +274,6 @@ def class_header_text(event_c):
 
 
 def driver_header_text(event_c):
-    event_c = event_c
     e = ""
     for i in range(1, event_c + 1):
         e += f"Event {i : <5}"
@@ -292,7 +282,6 @@ def driver_header_text(event_c):
 
 
 def class_header_csv(event_c):
-    event_c = event_c
     h = ["Place", "Driver", "Car", "Class"]
     for i in range(1, event_c + 1):
         h.append(f"Event {i}")
@@ -301,7 +290,6 @@ def class_header_csv(event_c):
 
 
 def driver_header_csv(event_c):
-    event_c = event_c
     h = ["Place", "Driver", "Car"]
     for i in range(1, event_c + 1):
         h.append(f"Event {i}")
@@ -313,7 +301,6 @@ def class_standings(driver_id, car_class):
     """This will take the drivers id, and class, then pull a list of events.  It will query event_date and driver/class to get points for that
     event.  It will compare the event_date and see if there's an event for that driver and class then append the points to the output, if that
     event doesn't exist for that driver/class it will append zero points."""
-    cs = []
     ep = []
     driver_id = driver_id
     car_class = car_class
@@ -590,10 +577,10 @@ def main():
             sql = f"SELECT id from drivers where car_number = '{car_number}'"
             results = execute_read_query(db_conn, sql)
             driver_id = results[0][0]
-            sql = f"INSERT into class_results VALUES (NULL,'{event_date}',{driver_id},'{car_class}',0,0,0,0,0,1)"
+            sql = f"INSERT into class_results VALUES (NULL,'{event_date}',{driver_id},'{car_class}',0,0,0,0,0,1,0)"
             print(sql)
             results = execute_query(db_conn, sql)
-            sql = f"INSERT into driver_results VALUES (NULL, '{event_date}',{driver_id},NULL,0,0,0,1)"
+            sql = f"INSERT into driver_results VALUES (NULL, '{event_date}',{driver_id},NULL,0,0,0,1,0)"
             results = execute_query(db_conn, sql)
             generate_points()
             update_average_points(driver_id, car_class)
@@ -615,7 +602,7 @@ def main():
             fn = args.filename
             fh = open(fn, "w")
             writer = csv.writer(fh, delimiter=",", quotechar='"')
-        event_c = event_count()
+        event_c = len(event_dates())
         if args.car_class:
             car_class.append(args.car_class.upper())
         else:
@@ -658,7 +645,7 @@ def main():
         generate_points()
         sql = "select ROW_NUMBER () OVER ( ORDER BY points DESC) RowNum, driver_name, car_number, points from driver_points join drivers on driver_points.driver_id = drivers.id"
         result = execute_read_query(db_conn, sql)
-        event_c = event_count()
+        event_c = len(event_dates())
         if args.output == "text":
             print(f"{driver_header_text(event_c)}")
             for r in result:
