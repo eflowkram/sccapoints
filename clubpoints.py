@@ -20,7 +20,8 @@ CT = int(config.get("region", "CT"))
 non_points = config.get("region", "non_points")
 non_points = non_points.split(",")
 
-# importlib will let you use import_module but it is imported into it's own namespace so we move the fuctions to global NS.
+# importlib will let you use import_module but it is imported into it's
+# own namespace so we move the fuctions to global NS.
 ns = importlib.import_module(club)
 calc_points = ns.calc_points
 
