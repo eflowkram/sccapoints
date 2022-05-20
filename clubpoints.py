@@ -285,16 +285,16 @@ def driver_header_text(event_c):
 def class_header_csv(event_c):
     h = ["Place", "Driver", "Car", "Class"]
     for i in range(1, event_c + 1):
-        h.append(f"'Event {i}'")
+        h.append(f"Event {i}")
     h = h + ["Points", "Cones", "DNF"]
     return h
 
 
 def driver_header_csv(event_c):
-    h = ["'Place'", "'Driver'", "'Car'"]
+    h = ["Place", "Driver", "Car"]
     for i in range(1, event_c + 1):
-        h.append(f"'Event {i}'")
-    h = h + ["'Points'"]
+        h.append(f"Event {i}")
+    h = h + ["Points"]
     return h
 
 
@@ -704,7 +704,7 @@ def main():
                 for e in event_p:
                     event_points_string += f"{e},"
                 print(
-                    f"{r[0]},'{r[1]}',{r[2]},{event_points_string}{r[3]}",
+                    f"{r[0]},{r[1]},{r[2]},{event_points_string}{r[3]}",
                     sep="",
                     file=fh,
                 )
