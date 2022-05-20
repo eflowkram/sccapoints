@@ -5,14 +5,11 @@ import requests
 import importlib
 from bs4 import BeautifulSoup
 import argparse
-from dateutil import parser
-import json
 import sys
 import os
 import sqlite3
 import re
 from sqlite3 import Error
-import csv
 
 
 config = ConfigParser()
@@ -121,7 +118,6 @@ def execute_query(connection, query):
 
 def execute_read_query(connection, query):
     cursor = connection.cursor()
-    result = None
     try:
         cursor.execute(query)
         result = cursor.fetchall()
@@ -205,7 +201,7 @@ def total_driver_points(driver_id):
     return dp
 
 
-def listToString(s):
+def list_to_string(s):
     string = ""
     for element in s:
         string += element
@@ -223,8 +219,8 @@ def get_event_date(table_handle):
     date_mask = "\\d{2}-\\d{2}-\\d{4}"
     header_data = table_data(table_handle)
     event_date = None
-    for l in header_data:
-        result = re.search(date_mask, str(l))
+    for line in header_data:
+        result = re.search(date_mask, str(line))
         if result is not None:
             event_date = result.group()
     if event_date is None:
@@ -346,11 +342,11 @@ def class_point_parser(soup, event_date):
     class_table = soup.find_all("table")[2]
     # = [[cell.text.strip() for cell in row.find_all(["th","td"])]
     #                        for row in class_table.find_all("tr")]i
-
+    car_class = ""
+    winner_time = float()
     class_data = table_data(class_table)
     for item in class_data:
-        row_length = len(item)
-        first_element = listToString(item[0])
+        first_element = list_to_string(item[0])
         if len(first_element) == 0:
             continue
         if first_element[0].isalpha():
@@ -392,11 +388,11 @@ def driver_point_parser(soup, event_date):
     pax_table = soup.find_all("table")[1]
     # = [[cell.text.strip() for cell in row.find_all(["th","td"])]
     #                        for row in class_table.find_all("tr")]i
+    winner_time = float()
 
     pax_data = table_data(pax_table)
     for item in pax_data:
-        row_length = len(item)
-        first_element = listToString(item[0])
+        first_element = list_to_string(item[0])
         if len(first_element) == 0:
             continue
         if first_element[0].isalpha():
@@ -444,7 +440,7 @@ def missed_events(driver_id, car_class):
                 f"no event found for driver id: {driver_id} class: {car_class} date: {d} creating entry."
             )
             sql = f"INSERT into class_results VALUES (NULL,'{d}',{driver_id},'{car_class}',0,0,0,0,0,0,1)"
-            results = execute_query(db_conn, sql)
+            execute_query(db_conn, sql)
         # do it for Pax
         sql = f"SELECT count(1) from driver_results where driver_id={driver_id} and event_date = '{d}'"
         results = execute_read_query(db_conn, sql)
@@ -453,7 +449,7 @@ def missed_events(driver_id, car_class):
                 f"no pax event found for driver id: {driver_id} date: {d} creating entry."
             )
             sql = f"INSERT into driver_results VALUES (NULL, '{d}',{driver_id},NULL,0,0,0,0,1)"
-            results = execute_query(db_conn, sql)
+            execute_query(db_conn, sql)
     return
 
 
@@ -485,10 +481,10 @@ def generate_points():
             result = execute_read_query(db_conn, sql)
             cones, dnf = result[0]
             sql = f"INSERT into class_points values (NULL,{driver_id},'{car_class}',{total_points},{cones},{dnf})"
-            result = execute_query(db_conn, sql)
+            execute_query(db_conn, sql)
         tdp = total_driver_points(driver_id)
         sql = f"INSERT into driver_points values (NULL,{driver_id},{tdp})"
-        result = execute_query(db_conn, sql)
+        execute_query(db_conn, sql)
     return
 
 
@@ -608,18 +604,18 @@ def main():
             driver_id = results[0][0]
             sql = f"INSERT into class_results VALUES (NULL,'{event_date}',{driver_id},'{car_class}',0,0,0,0,0,1,0)"
             print(sql)
-            results = execute_query(db_conn, sql)
+            execute_query(db_conn, sql)
             sql = f"INSERT into driver_results VALUES (NULL, '{event_date}',{driver_id},NULL,0,0,0,1,0)"
-            results = execute_query(db_conn, sql)
+            execute_query(db_conn, sql)
             generate_points()
             update_average_points(driver_id, car_class)
         else:
             print("Records Found, updating average")
             driver_id = results[0][1]
             sql = f"UPDATE class_results set national = 1 where driver_id = {driver_id} and class = '{car_class}' and event_date = '{event_date}'"
-            results = execute_query(db_conn, sql)
+            execute_query(db_conn, sql)
             sql = f"UPDATE driver_results set national = 1 where driver_id = {driver_id} and event_date = '{event_date}'"
-            results = execute_query(db_conn, sql)
+            execute_query(db_conn, sql)
             update_average_points(driver_id, car_class)
 
     if args.generate:
