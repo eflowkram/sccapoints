@@ -685,29 +685,36 @@ def main():
         result = execute_read_query(db_conn, sql)
         event_c = len(event_dates())
         if args.output == "text":
-            print(f"{driver_header_text(event_c)}",file=fh)
+            print(f"{driver_header_text(event_c)}", file=fh)
             for r in result:
                 event_points_string = ""
                 event_p = driver_event_points(r[2])
                 for e in event_p:
                     event_points_string += f"{e : <11}"
                 print(
-                    f"{r[0] : <10}{r[1] : <20}{r[2] : <8}{event_points_string}{r[3] : <8}",sep='',file=fh
+                    f"{r[0] : <10}{r[1] : <20}{r[2] : <8}{event_points_string}{r[3] : <8}",
+                    sep="",
+                    file=fh,
                 )
         if args.output == "csv":
             dh_string = ""
             dhl = driver_header_csv(event_c)
             for i in dhl:
                 dh_string += f"{i},"
-            print(dh_string[:-1],sep='',file=fh)
+            print(dh_string[:-1], sep="", file=fh)
             for r in result:
                 event_points_string = ""
                 event_p = driver_event_points(r[2])
                 for e in event_p:
                     event_points_string += f"{e},"
-                print(f"{r[0]},'{r[1]}',{r[2]},{event_points_string}{r[3]}",sep='',file=fh)
+                print(
+                    f"{r[0]},'{r[1]}',{r[2]},{event_points_string}{r[3]}",
+                    sep="",
+                    file=fh,
+                )
         if fh:
             fh.close()
+
 
 if __name__ == "__main__":
     main()
