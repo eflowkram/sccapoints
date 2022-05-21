@@ -629,7 +629,7 @@ def main():
         "-a",
         "--average",
         help=f"create record for driver that went to a national event.  Requires car number and class name.  "
-             f"Use --name for class name.  ie {argparser.prog} -a <CARNUMBER> -n <CLASS> -d MM-DD-YYYY",
+        f"Use --name for class name.  ie {argparser.prog} -a <CARNUMBER> -n <CLASS> -d MM-DD-YYYY",
         dest="average",
         default=None,
         required=False,
