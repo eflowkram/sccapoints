@@ -20,8 +20,8 @@ CT = int(config.get("region", "CT"))
 non_points = config.get("region", "non_points")
 non_points = non_points.split(",")
 
-# importlib will let you use import_module but it is imported into it's
-# own namespace so we move the fuctions to global NS.
+# importlib will let you use import_module, but it is imported into it's
+# own namespace, so we move the functions to global NS.
 ns = importlib.import_module(club)
 calc_points = ns.calc_points
 
@@ -138,27 +138,62 @@ def event_dates():
 
 def update_average_points(driver_id, car_class):
     sum_points = float()
-    sql = f"SELECT count(1) from class_results where driver_id = {driver_id} and national = 1"
+    sql = (
+        f"SELECT "
+        f"count(1) "
+        f"FROM "
+        f"class_results "
+        f"WHERE "
+        f"driver_id = {driver_id} and national = 1"
+    )
     results = execute_read_query(db_conn, sql)
+    if DEBUG:
+        print(results)
     if results[0][0] == 0:
         return
-    sql = f"SELECT points from class_results where class = '{car_class}' and driver_id = '{driver_id}' and national = 0 and missed = 0"
+    sql = (
+        f"SELECT "
+        f"points "
+        f"FROM "
+        f"class_results "
+        f"WHERE class = '{car_class}' and driver_id = '{driver_id}' and national = 0 and missed = 0"
+    )
     points = execute_read_query(db_conn, sql)
     points_count = len(points)
-    if DEBUG:
-        print(driver_id)
     for n in points:
         sum_points += n[0]
+    if DEBUG:
+        print(
+            f"driver_id: {driver_id} points_count: {points_count} sum_points: {sum_points}"
+        )
     avg_points = sum_points / points_count
     avg_points = round(avg_points, 3)
-    sql = f"UPDATE class_results set points = {avg_points} where  class = '{car_class}' and driver_id = '{driver_id}' and national = 1"
+    sql = (
+        f"UPDATE "
+        f"class_results "
+        f"SET points = {avg_points} "
+        f"WHERE class = '{car_class}' and driver_id = '{driver_id}' and national = 1"
+    )
     execute_query(db_conn, sql)
     sum_driver_points = float()
-    sql = f"SELECT points from driver_results where driver_id = '{driver_id}' and national = 0 and missed = 0"
+    sql = (
+        f"SELECT "
+        f"points "
+        f"FROM "
+        f"driver_results "
+        f"WHERE "
+        f"driver_id = '{driver_id}' and national = 0 and missed = 0"
+    )
     driver_points = execute_read_query(db_conn, sql)
+    if DEBUG:
+        print(driver_points)
     points_count = len(driver_points)
     for n in driver_points:
         sum_driver_points += n[0]
+    if DEBUG:
+        print(
+            f"driver_id: {driver_id} points_count: {points_count} sum_points: {sum_driver_points}"
+        )
     avg_points = sum_driver_points / points_count
     avg_points = round(avg_points, 3)
     sql = f"UPDATE driver_results set points = {avg_points} where driver_id = '{driver_id}' and national = 1"
@@ -301,7 +336,15 @@ def driver_header_csv(event_c):
 def driver_event_points(car_number):
     event_p = []
     for ed in event_dates():
-        sql = f"SELECT points from driver_results join drivers on driver_results.driver_id=drivers.id where car_number = {car_number} and event_date='{ed}'"
+        sql = (
+            f"SELECT "
+            f"points "
+            f"FROM "
+            f"driver_results "
+            f"JOIN "
+            f"drivers on driver_results.driver_id=drivers.id "
+            f"WHERE car_number = {car_number} and event_date='{ed}'"
+        )
         event_result = execute_read_query(db_conn, sql)
         if len(event_result) == 0:
             event_p.append("0")
@@ -311,22 +354,46 @@ def driver_event_points(car_number):
 
 
 def class_standings(driver_id, car_class):
-    """This will take the drivers id, and class, then pull a list of events.  It will query event_date and driver/class to get points for that
-    event.  It will compare the event_date and see if there's an event for that driver and class then append the points to the output, if that
-    event doesn't exist for that driver/class it will append zero points."""
+    """This will take the drivers id, and class, then pull a list of events.
+    It will query event_date and driver/class to get points for that event.
+    It will compare the event_date and see if there's an event for that driver and class and
+    then append the points to the output, if that event doesn't exist for that driver/class,
+    it will append zero points.
+    """
     ep = []
     driver_id = driver_id
     car_class = car_class
     sql = f"select distinct(event_date) from class_results"
     results = execute_read_query(db_conn, sql)
     for e in results:
-        sql = f"select points from class_results where driver_id={driver_id} and class='{car_class}' and event_date='{e[0]}'"
+        sql = (
+            f"SELECT "
+            f"points "
+            f"FROM "
+            f"class_results "
+            f"WHERE "
+            f"driver_id={driver_id} and class='{car_class}' and event_date='{e[0]}'"
+        )
         results = execute_read_query(db_conn, sql)
         if len(results) == 1:
             ep.append(results[0][0])
         else:
             ep.append(0)
-    class_sql = f"SELECT driver_name,car_number,points,cones,dnf from class_points join drivers on drivers.id=class_points.driver_id where class='{car_class}' and driver_id='{driver_id}'"
+    class_sql = (
+        f"SELECT driver_name,"
+        f"car_number,"
+        f"points,"
+        f"cones,"
+        f"dnf "
+        f"FROM "
+        f"class_points "
+        f"JOIN "
+        f"drivers "
+        f"ON "
+        f"drivers.id=class_points.driver_id "
+        f"WHERE "
+        f"class='{car_class}' and driver_id='{driver_id}'"
+    )
     results = execute_read_query(db_conn, class_sql)
     cs = [
         results[0][0],
@@ -370,7 +437,8 @@ def class_point_parser(soup, event_date):
         cones, dnf = get_cone_dnf(item)
         if points_card(car_number):
             print(
-                f"Event Date: {event_date} Position: {position} Class: {car_class} Car No: {car_number} Driver: {driver} Points: {points} Cones: {cones} DNF: {dnf}"
+                f"Event Date: {event_date} Position: {position} Class: {car_class} Car No: {car_number} "
+                f"Driver: {driver} Points: {points} Cones: {cones} DNF: {dnf}"
             )
             # Create driver record if it doesn't exist
             sql = f"SELECT id from drivers where car_number = '{car_number}'"
@@ -380,7 +448,12 @@ def class_point_parser(soup, event_date):
                 driver_id = execute_query(db_conn, sql)
             else:
                 driver_id = driver_results[0][0]
-            sql = f"INSERT INTO class_results VALUES (NULL,'{event_date}',{driver_id},'{car_class}',{position},{final_time},{points},{cones},{dnf},0,0)"
+            sql = (
+                f"INSERT INTO "
+                f"class_results "
+                f"VALUES "
+                f"(NULL,'{event_date}',{driver_id},'{car_class}',{position},{final_time},{points},{cones},{dnf},0,0)"
+            )
             execute_query(db_conn, sql)
     return
 
@@ -423,33 +496,64 @@ def driver_point_parser(soup, event_date):
             driver_id = execute_query(db_conn, sql)
         else:
             driver_id = driver_results[0][0]
-        sql = f"INSERT INTO driver_results VALUES (NULL,'{event_date}',{driver_id},'{car_class}',{position},{final_time},{points},0,0)"
+        sql = (
+            f"INSERT INTO "
+            f"driver_results "
+            f"VALUES "
+            f"(NULL,'{event_date}',{driver_id},'{car_class}',{position},{final_time},{points},0,0)"
+        )
         execute_query(db_conn, sql)
     return
 
 
 def missed_events(driver_id, car_class):
     """
-    this function will insert a zero point result into the class and pax results tables for missed events
+    This function will insert a zero point result into the class and pax results tables for missed events.
+    This row will have a bool `missed` which is needed because previous logic would count a missed event as a zero
+    point event.  This could also be fixed by querying against driver_id and event date and treating a Null result.
     """
     ed = event_dates()
     for d in ed:
-        sql = f"SELECT count(1) from class_results where driver_id={driver_id} and class='{car_class}' and event_date = '{d}'"
+        sql = (
+            f"SELECT "
+            f"count(1) "
+            f"FROM "
+            f"class_results "
+            f"WHERE "
+            f"driver_id={driver_id} and class='{car_class}' and event_date = '{d}'"
+        )
         results = execute_read_query(db_conn, sql)
         if results[0][0] == 0:
             print(
                 f"no event found for driver id: {driver_id} class: {car_class} date: {d} creating entry."
             )
-            sql = f"INSERT into class_results VALUES (NULL,'{d}',{driver_id},'{car_class}',0,0,0,0,0,0,1)"
+            sql = (
+                f"INSERT INTO "
+                f"class_results "
+                f"VALUES "
+                f"(NULL,'{d}',{driver_id},'{car_class}',0,0,0,0,0,0,1)"
+            )
             execute_query(db_conn, sql)
         # do it for Pax
-        sql = f"SELECT count(1) from driver_results where driver_id={driver_id} and event_date = '{d}'"
+        sql = (
+            f"SELECT "
+            f"count(1) "
+            f"FROM "
+            f"driver_results "
+            f"WHERE "
+            f"driver_id={driver_id} and event_date = '{d}'"
+        )
         results = execute_read_query(db_conn, sql)
         if results[0][0] == 0:
             print(
                 f"no pax event found for driver id: {driver_id} date: {d} creating entry."
             )
-            sql = f"INSERT into driver_results VALUES (NULL, '{d}',{driver_id},NULL,0,0,0,0,1)"
+            sql = (
+                f"INSERT INTO "
+                f"driver_results "
+                f"VALUES "
+                f"(NULL, '{d}',{driver_id},NULL,0,0,0,0,1)"
+            )
             execute_query(db_conn, sql)
     return
 
@@ -459,7 +563,8 @@ def generate_points():
     zero points table
     get all driver ids
     query class results, pull driver id, car class
-    pass driver id and class to total points function which will calculate drops and return total points for driver/class.
+    pass driver id and class to total points function
+    total points function will calculate drops and return total points for driver/class.
     calculate points for class with drops and store in points table.
     """
     # zero points table
@@ -471,17 +576,37 @@ def generate_points():
     driver_id_results = execute_read_query(db_conn, sql)
     for i in driver_id_results:
         driver_id = i[0]
-        sql = f"select distinct class from class_results where driver_id={driver_id}"
+        sql = (
+            f"SELECT DISTINCT "
+            f"class "
+            f"FROM "
+            f"class_results "
+            f"WHERE "
+            f"driver_id={driver_id}"
+        )
         driver_class_results = execute_read_query(db_conn, sql)
         for c in driver_class_results:
             car_class = c[0]
             missed_events(driver_id, car_class)
             update_average_points(driver_id, car_class)
             total_points = total_class_points(driver_id, c[0])
-            sql = f"SELECT sum(cones), sum(dnf) from class_results where driver_id={driver_id} and class='{car_class}' and missed=0"
+            sql = (
+                f"SELECT "
+                f"sum(cones), "
+                f"sum(dnf) "
+                f"FROM "
+                f"class_results "
+                f"WHERE "
+                f"driver_id={driver_id} and class='{car_class}' and missed=0"
+            )
             result = execute_read_query(db_conn, sql)
             cones, dnf = result[0]
-            sql = f"INSERT into class_points values (NULL,{driver_id},'{car_class}',{total_points},{cones},{dnf})"
+            sql = (
+                f"INSERT INTO "
+                f"class_points "
+                f"VALUES "
+                f"(NULL,{driver_id},'{car_class}',{total_points},{cones},{dnf})"
+            )
             execute_query(db_conn, sql)
         tdp = total_driver_points(driver_id)
         sql = f"INSERT into driver_points values (NULL,{driver_id},{tdp})"
@@ -501,15 +626,21 @@ def main():
         required=False,
     )
     argparser.add_argument(
-        "-n",
-        "--national",
-        help="car number for national",
-        dest="national",
+        "-a",
+        "--average",
+        help=f"create record for driver that went to a national event.  Requires car number and class name.  "
+             f"Use --name for class name.  ie {argparser.prog} -a <CARNUMBER> -n <CLASS> -d MM-DD-YYYY",
+        dest="average",
         default=None,
         required=False,
     )
     argparser.add_argument(
-        "-c", "--car_class", help="class for national", default=None, required=False
+        "-n",
+        "--name",
+        help="class for national",
+        dest="car_class",
+        default=None,
+        required=False,
     )
     argparser.add_argument(
         "-d", "--event_date", help="event_date", default=None, required=False
@@ -523,9 +654,9 @@ def main():
         required=False,
     )
     argparser.add_argument(
-        "-p",
-        "--print_points",
-        help="Display points, can be used with -c/--car_class",
+        "-c",
+        "--class_points",
+        help="Display class points, can be used with -n/--name",
         action="store_true",
         required=False,
     )
@@ -587,12 +718,26 @@ def main():
         else:
             sys.exit("Invalid Input")
 
-    if args.national:
-        event_date = args.event_date
-        car_number = args.national
-        car_class = args.car_class.upper()
+    if args.average:
+        try:
+            event_date = args.event_date
+            car_number = args.average
+            car_class = args.car_class.upper()
+        except Exception as e:
+            print(f"Error: {e}")
         # event_date.
-        sql = f"SELECT class_results.id,drivers.id from class_results JOIN drivers on drivers.id = driver_id where event_date = '{event_date}' and class = '{car_class}' and car_number = '{car_number}'"
+        sql = (
+            f"SELECT "
+            f"class_results.id, "
+            f"drivers.id "
+            f"FROM class_results "
+            f"JOIN "
+            f"drivers "
+            f"ON "
+            f"drivers.id = driver_id "
+            f"WHERE "
+            f"event_date = '{event_date}' and class = '{car_class}' and car_number = '{car_number}'"
+        )
         results = execute_read_query(db_conn, sql)
         if len(results) == 0:
             print("no record found, adding record.")
@@ -600,26 +745,50 @@ def main():
             sql = f"SELECT id from drivers where car_number = '{car_number}'"
             results = execute_read_query(db_conn, sql)
             driver_id = results[0][0]
-            sql = f"INSERT into class_results VALUES (NULL,'{event_date}',{driver_id},'{car_class}',0,0,0,0,0,1,0)"
+            sql = (
+                f"INSERT INTO"
+                f"class_results "
+                f"VALUES "
+                f"(NULL,'{event_date}',{driver_id},'{car_class}',0,0,0,0,0,1,0)"
+            )
             print(sql)
             execute_query(db_conn, sql)
-            sql = f"INSERT into driver_results VALUES (NULL, '{event_date}',{driver_id},NULL,0,0,0,1,0)"
+            sql = (
+                f"INSERT INTO "
+                f"driver_results "
+                f"VALUES "
+                f"(NULL, '{event_date}',{driver_id},NULL,0,0,0,1,0)"
+            )
             execute_query(db_conn, sql)
             generate_points()
             update_average_points(driver_id, car_class)
         else:
             print("Records Found, updating average")
             driver_id = results[0][1]
-            sql = f"UPDATE class_results set national = 1 where driver_id = {driver_id} and class = '{car_class}' and event_date = '{event_date}'"
+            sql = (
+                f"UPDATE "
+                f"class_results "
+                f"SET "
+                f"national = 1 "
+                f"WHERE "
+                f"driver_id = {driver_id} and class = '{car_class}' and event_date = '{event_date}'"
+            )
             execute_query(db_conn, sql)
-            sql = f"UPDATE driver_results set national = 1 where driver_id = {driver_id} and event_date = '{event_date}'"
+            sql = (
+                f"UPDATE "
+                f"driver_results "
+                f"SET "
+                f"national = 1 "
+                f"WHERE "
+                f"driver_id = {driver_id} and event_date = '{event_date}'"
+            )
             execute_query(db_conn, sql)
             update_average_points(driver_id, car_class)
 
     if args.generate:
         generate_points()
 
-    if args.print_points:
+    if args.class_points:
         if args.file:
             fh = open(args.file, "w")
         else:
@@ -628,6 +797,8 @@ def main():
         car_class = []
         # open filehandle for csv
         event_c = len(event_dates())
+        if DEBUG:
+            print(f"args.name {args.name} args.car_class: {args.car_class}")
         if args.car_class:
             car_class.append(args.car_class.upper())
         else:
@@ -637,7 +808,16 @@ def main():
                 car_class.append(cc[0])
         for c in car_class:
             p = 1
-            class_sql = f"SELECT driver_id from class_points join drivers on drivers.id=class_points.driver_id where class='{c}' order by points DESC"
+            class_sql = (
+                f"SELECT "
+                f"driver_id "
+                f"FROM "
+                f"class_points "
+                f"JOIN "
+                f"drivers on drivers.id=class_points.driver_id "
+                f"WHERE "
+                f"class='{c}' order by points DESC"
+            )
             results = execute_read_query(db_conn, class_sql)
             if args.output == "text":
                 h = class_header_text(event_c)
@@ -675,7 +855,15 @@ def main():
         else:
             fh = None
         generate_points()
-        sql = "select ROW_NUMBER () OVER ( ORDER BY points DESC) RowNum, driver_name, car_number, points from driver_points join drivers on driver_points.driver_id = drivers.id"
+        sql = (
+            "SELECT "
+            "ROW_NUMBER () OVER ( ORDER BY points DESC) RowNum, "
+            "driver_name, car_number, points "
+            "FROM "
+            "driver_points "
+            "JOIN "
+            "drivers on driver_points.driver_id = drivers.id"
+        )
         result = execute_read_query(db_conn, sql)
         event_c = len(event_dates())
         if args.output == "text":
