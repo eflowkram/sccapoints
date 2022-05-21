@@ -746,7 +746,7 @@ def main():
             results = execute_read_query(db_conn, sql)
             driver_id = results[0][0]
             sql = (
-                f"INSERT INTO"
+                f"INSERT INTO "
                 f"class_results "
                 f"VALUES "
                 f"(NULL,'{event_date}',{driver_id},'{car_class}',0,0,0,0,0,1,0)"
