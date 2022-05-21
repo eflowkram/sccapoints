@@ -28,16 +28,15 @@ Execute `pip install -r requirements.txt`  this will install any required module
 
 ## Switches
 `-u/--url`  Url to webscrape<br>
-`-g/--generate` Used to update the results table with the class data and drivers data.<br>
-`-p/--print` Prints class results as text.<br>
-`-n/--national` Accepts a car number along with event date and class, this is for people who have attended a national event and are awarded the average score of their local events for that missed event.<br>
+`-g/--generate` Used to update the results table with the class data and drivers data.  This function is called before printing and when updating average points.<br>
+`-c/--classpoints` Prints class results as text.<br>
+`-a/--average` Requirs a car number, event date and class.<br>
+    This is for people who have attended a national event and are awarded the average score of their local events for that missed event.<br>
 `-d/--date` Date input in the format of MM-DD-YYYY.<br>
-`-c/--class` Car Class ie.  CS, PAX, M1.<br>
+`-n/--name` Car Class name ie.  CS, PAX, M1.<br>
 `--driver` Output the driver pax standings.<br>
 `-f/--file` Filename for CSV output file, defaults to None 
 
 
 ## To Do
-Utilize file output to csv, possibly add pdf output.  
-streamline code, refactor bits of it.  
-Get debug switch working.
+sort of complete right now
