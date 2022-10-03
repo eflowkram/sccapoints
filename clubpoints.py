@@ -251,6 +251,16 @@ def table_data(table_handle):
     ]
 
 
+def get_file_format(table_handle):
+    header_data = table_data(table_handle)
+    for line in header_data:
+        for item in line:
+            if "Mobile" in item:
+                print("mobile found")
+                return "mobile"
+    return "standard"
+
+
 def get_event_date(table_handle):
     date_mask = "\\d{2}-\\d{2}-\\d{4}"
     header_data = table_data(table_handle)
@@ -313,7 +323,8 @@ def driver_header_text(event_c):
     e = ""
     for i in range(1, event_c + 1):
         e += f"Event {i : <5}"
-    h = f"\n{'Place' : <10}{'Driver' : <20}{'Car' : <8}" + e + f"{'Points' : <7}"
+    h = f"\n{'Place' : <10}{'Driver' : <20}{'Car' : <8}" + \
+        e + f"{'Points' : <7}"
     return h
 
 
@@ -406,23 +417,52 @@ def class_standings(driver_id, car_class):
     return cs, ep
 
 
-def class_point_parser(soup, event_date):
+def get_car_class(cc):
+    if cc.startswith("PAXL"):
+        return "PAXL"
+    if cc.startswith("PAX"):
+        return "PAX"
+    if cc.startswith("HST1"):
+        return "HST1"
+    if cc.startswith("HST2"):
+        return "HST2"
+    if cc.startswith("SP"):
+        return "SP"
+    if cc.startswith("XS"):
+        return "XS"
+    if cc.startswith("P"):
+        return "P"
+    return cc
+
+
+def class_point_parser(soup, event_date, mobile_format="standard"):
     class_table = soup.find_all("table")[2]
     # = [[cell.text.strip() for cell in row.find_all(["th","td"])]
     #                        for row in class_table.find_all("tr")]i
     car_class = ""
     winner_time = float()
     class_data = table_data(class_table)
+    print(f"Mobile: {mobile_format}")
     for item in class_data:
+        if len(item) == 0:
+            continue
         first_element = list_to_string(item[0])
         if len(first_element) == 0:
             continue
-        if first_element[0].isalpha():
+        if first_element[0].isalpha() and mobile_format == "standard":
             car_class = first_element.split(" ")[0]
             if car_class not in non_points:
                 print(f"Class: {car_class}")
             continue
+        if first_element[0].isalpha() and mobile_format == "mobile":
+            continue
+        if item[0] == "1T" and mobile_format == "mobile":
+            car_class = get_car_class(item[1])
+            if car_class not in non_points:
+                print(f"Class: {car_class}")
         if car_class in non_points:
+            continue
+        if item[2].endswith("X"):
             continue
         car_number = int(item[2])
         position = first_element.replace("T", "")
@@ -470,6 +510,8 @@ def driver_point_parser(soup, event_date):
         if len(first_element) == 0:
             continue
         if first_element[0].isalpha():
+            continue
+        if item[2].endswith('X'):
             continue
         car_number = int(item[2])
         if car_number >= 1000:
@@ -704,13 +746,16 @@ def main():
         soup = BeautifulSoup(link, "html.parser")
         table_count = len(soup.find_all("table"))
         event_date = get_event_date(soup.find_all("table")[0])
+        mobile_format = get_file_format(soup.find_all("table")[0])
+        print(f"tablecount: {table_count}")
+        print(f"mobile_format: {mobile_format}")
         print(f"ed: {event_date}")
         if table_count == 4:
-            class_point_parser(soup, event_date)
+            class_point_parser(soup, event_date, mobile_format)
         elif table_count == 3:
             table = soup.find_all("table")[1]
             if len(table_data(table)) < 5:
-                class_point_parser(soup, event_date)
+                class_point_parser(soup, event_date, mobile_format)
             else:
                 driver_point_parser(soup, event_date)
         elif table_count == 2:
