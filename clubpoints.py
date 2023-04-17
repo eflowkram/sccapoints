@@ -444,6 +444,11 @@ def class_point_parser(soup, event_date, mobile_format="standard"):
     class_data = table_data(class_table)
     print(f"Mobile: {mobile_format}")
     for item in class_data:
+        # This is probably bad, but we will make an assumption on where best time is.
+        # This appears to be the second to last column.
+        print(f"column count: {len(item)}")
+        print(f"best time column: {len(item)-2}")
+        CT=len(item)-2
         if len(item) == 0:
             continue
         first_element = list_to_string(item[0])
@@ -469,6 +474,7 @@ def class_point_parser(soup, event_date, mobile_format="standard"):
         if item[CT] in ["DNS", "DNF"]:
             continue
         final_time = item[CT]
+        print(f"final time: {final_time}")
         if position == "1":
             winner_time = float(item[CT])
             print(f"winner_time: {winner_time}")
@@ -506,6 +512,8 @@ def driver_point_parser(soup, event_date):
 
     pax_data = table_data(pax_table)
     for item in pax_data:
+        print(f"Columns in row: {len(item)}")
+        final_time_column=len(item)-3
         first_element = list_to_string(item[0])
         if len(first_element) == 0:
             continue
@@ -518,9 +526,10 @@ def driver_point_parser(soup, event_date):
             continue
         car_class = item[1]
         position = first_element.replace("T", "")
-        final_time = item[8]
+        final_time = item[final_time_column]
+        print(f"final time: {final_time}")
         if position == "1":
-            winner_time = float(item[8])
+            winner_time = float(item[final_time_column])
             print(f"winner_time: {winner_time}")
         driver = item[3].replace("'", "").title()
         if item[6] == "DNF":
