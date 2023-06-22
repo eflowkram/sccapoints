@@ -471,15 +471,20 @@ def class_point_parser(soup, event_date, mobile_format="standard"):
             continue
         car_number = int(item[2])
         position = first_element.replace("T", "")
-        if item[CT] in ["DNS", "DNF"]:
+        if item[CT] in ["DNS"]:
             continue
-        final_time = item[CT]
+        if item[CT] in ["DNF"]:
+            final_time = 0.000
+            points = 70
+        else:
+            final_time = float(item[CT])
         print(f"final time: {final_time}")
         if position == "1":
-            winner_time = float(item[CT])
+            winner_time = final_time
             print(f"winner_time: {winner_time}")
         driver = item[3].replace("'", "").title()
-        points = calc_points(winner_time, float(final_time))
+        if item[CT] not in ["DNF"]:
+            points = calc_points(winner_time, float(final_time))
         cones, dnf = get_cone_dnf(item)
         if points_card(car_number):
             print(
@@ -532,9 +537,11 @@ def driver_point_parser(soup, event_date):
             winner_time = float(item[final_time_column])
             print(f"winner_time: {winner_time}")
         driver = item[3].replace("'", "").title()
-        if item[6] == "DNF":
+        if item[5] == "DNS":
+            continue
+        if item[5] == "DNF":
             points = 70
-        else:
+        if item[5] != "DNF":
             points = calc_points(winner_time, float(final_time))
         print(
             f"Event Date: {event_date} Pax Position: {position} Car No: {car_number} Driver: {driver} Points: {points}"
