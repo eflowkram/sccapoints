@@ -19,6 +19,7 @@ club = config.get("region", "club")
 CT = int(config.get("region", "CT"))
 non_points = config.get("region", "non_points")
 non_points = non_points.split(",")
+dnf_points = config.get("region", "dnf_points")
 
 # importlib will let you use import_module, but it is imported into it's
 # own namespace, so we move the functions to global NS.
@@ -475,7 +476,7 @@ def class_point_parser(soup, event_date, mobile_format="standard"):
             continue
         if item[CT] in ["DNF"]:
             final_time = 0.000
-            points = 70
+            points = dnf_points
         else:
             final_time = float(item[CT])
         print(f"final time: {final_time}")
@@ -540,7 +541,7 @@ def driver_point_parser(soup, event_date):
         if item[5] == "DNS":
             continue
         if item[5] == "DNF":
-            points = 70
+            points = dnf_points
         if item[5] != "DNF":
             points = calc_points(winner_time, float(final_time))
         print(
