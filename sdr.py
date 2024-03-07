@@ -5,7 +5,11 @@ def points_card(number):
 
 
 def calc_points(fastest, driver):
-    points_scored = (fastest / driver) * 100
+    print(fastest, driver)
+    if driver == 0:
+        points_scored = 70
+    else:
+        points_scored = (fastest / driver) * 100
     if points_scored < 70:
         points_scored = 70
     return round(points_scored, 3)
