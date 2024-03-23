@@ -14,10 +14,11 @@ Execute `pip install -r requirements.txt`  this will install any required module
 ## Usage
 1. Configure the script by editing the config.ini file.  Select San Diego region (sdr) or Calclub region (calclub)
 2. Initialize the database by running the script without any switches.  
-   1. Start building the data by webscraping.  This is done by using the -u switch and the url to the results. 
-      `./clubpoints -u https://sdrscca.com/solo2/results/2022/event-02%202022-02-27-Final_Web.htm`
+   1. Start building the data by webscraping.  This is done by using the -u switch and the url to the results. <br>
+      `./clubpoints -u https://sdrscca.com/solo2/results/2022/event-02%202022-02-27-Final_Web.htm`<br>
       It is preferred to input events in chronological order.  It is easiest to save the urls to a file, one per line and then loop over the file.
-      In bash this could be done something like this. `for u in $(cat sdr_urls); do ./clubpoints.py -u $u; done`
+      In bash this could be done something like this.<br> 
+      `for u in $(cat sdr_urls); do ./clubpoints.py -u $u; done`
    2. Two files are handy one with driver (pax) points urls and the other with class URLS. 
 3. Once the results are scraped and inserted into the database, printing results are as simple as running the script with the -p switch or --driver for pax standings.
 4. National Events.
