@@ -23,7 +23,7 @@ Execute `pip install -r requirements.txt`  this will install any required module
 3. Once the results are scraped and inserted into the database, printing results are as simple as running the script with the -p switch or --driver for pax standings.
 4. National Events.
    1. Both regions grant participants an average point score if they are attending a national level event that conflicts with a local event. 
-      To update the record, it is as simple as inputting the car number, class, and event date.  `./clubpoints.py -n 97 -c CS -d 04-03-2022` will create an entry in both the drivers (PAX) results and class results and calculate the average points for that driver based on attended local event results for that class.<br>
+      To update the record, it is as simple as inputting the car number, class, and event date.  `./clubpoints.py -a 97 -n CS -d 04-03-2022` will create an entry in both the drivers (PAX) results and class results and calculate the average points for that driver based on attended local event results for that class.<br>
 
 
 
