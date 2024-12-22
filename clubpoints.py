@@ -885,7 +885,7 @@ def main():
             for line in results:
                 epoints = ""
                 row, ep = class_standings(line[0], c)
-                debug(row, ep)
+                debug(f"row {row}, ep {ep}")
                 if args.output == "text":
                     for i in ep:
                         epoints += f"{i:<10}"
