@@ -93,13 +93,15 @@ CREATE TABLE driver_points (
 );
 """
 
+def debug(message):
+    if DEBUG:
+        print(f"[DEBUG]: {message}")
 
 def create_connection(path):
     connection = None
     try:
         connection = sqlite3.connect(path)
-        if DEBUG:
-            print("Connection to SQLite DB successful")
+        debug("Connection to SQLite DB successful")
     except Error as e:
         print(f"The error '{e}' occurred")
     return connection
@@ -110,8 +112,7 @@ def execute_query(connection, query):
     try:
         cursor.execute(query)
         connection.commit()
-        if DEBUG:
-            print("Query executed successfully")
+        debug("Query executed successfully")
         return cursor.lastrowid
     except Error as e:
         print(f"The error '{e}' occurred")
@@ -147,8 +148,7 @@ def update_average_points(driver_id, car_class):
         f"driver_id = {driver_id} and national = 1"
     )
     results = execute_read_query(db_conn, sql)
-    if DEBUG:
-        print(results)
+    debug(results)
     if results[0][0] == 0:
         return
     sql = (
@@ -162,8 +162,7 @@ def update_average_points(driver_id, car_class):
     points_count = len(points)
     for n in points:
         sum_points += n[0]
-    if DEBUG:
-        print(
+    debug(
             f"driver_id: {driver_id} points_count: {points_count} sum_points: {sum_points}"
         )
     avg_points = sum_points / points_count
@@ -185,13 +184,11 @@ def update_average_points(driver_id, car_class):
         f"driver_id = '{driver_id}' and national = 0 and missed = 0"
     )
     driver_points = execute_read_query(db_conn, sql)
-    if DEBUG:
-        print(driver_points)
+    debug(driver_points)
     points_count = len(driver_points)
     for n in driver_points:
         sum_driver_points += n[0]
-    if DEBUG:
-        print(
+    debug(
             f"driver_id: {driver_id} points_count: {points_count} sum_points: {sum_driver_points}"
         )
     avg_points = sum_driver_points / points_count
@@ -206,16 +203,14 @@ def total_class_points(driver_id, car_class):
     sql = f"select points from class_results where driver_id={driver_id} and class='{car_class}'"
     class_points_results = execute_read_query(db_conn, sql)
     drops = calc_drops(len(class_points_results))
-    if DEBUG:
-        print(f"number of events: {len(class_points_results)} drops: {drops}")
+    debug(f"number of events: {len(class_points_results)} drops: {drops}")
     count = len(class_points_results) - drops
     for p in class_points_results:
         rp.append(p[0])
     rp.sort(reverse=True)
     rp = rp[:count]
     tp = round(sum(rp), 3)
-    if DEBUG:
-        print(f"total points: {tp}")
+    debug(f"total points: {tp}")
     return tp
 
 
@@ -230,8 +225,7 @@ def total_driver_points(driver_id):
     rp.sort(reverse=True)
     rp = rp[:count]
     dp = round(sum(rp), 3)
-    if DEBUG:
-        print(
+    debug(
             f"driver_id: {driver_id} number of events: {len(driver_points_results)} points: {dp} drops: {drops}"
         )
     return dp
@@ -858,8 +852,7 @@ def main():
         car_class = []
         # open filehandle for csv
         event_c = len(event_dates())
-        if DEBUG:
-            print(f"args.name {args.name} args.car_class: {args.car_class}")
+        debug(f"args.name {args.name} args.car_class: {args.car_class}")
         if args.car_class:
             car_class.append(args.car_class.upper())
         else:
@@ -892,8 +885,7 @@ def main():
             for line in results:
                 epoints = ""
                 row, ep = class_standings(line[0], c)
-                if DEBUG:
-                    print(row, ep)
+                debug(f"row {row}, ep {ep}")
                 if args.output == "text":
                     for i in ep:
                         epoints += f"{i:<10}"
