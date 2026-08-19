@@ -5,3 +5,4 @@ calclub/
 .idea
 .pytest_cache/
 *.db
+*.csv
