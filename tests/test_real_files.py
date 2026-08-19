@@ -391,3 +391,62 @@ class TestNonCompetitiveEntries:
         classes = [r[0] for r in rows]
         assert "TO" not in classes and "X" not in classes
         assert "CS" in classes
+
+
+class TestSeasonIndex:
+    """A whole season can be scraped from the index page that lists it."""
+
+    def index_soup(self):
+        from bs4 import BeautifulSoup
+
+        with open(os.path.join(REAL, "season-index-2026.html")) as handle:
+            return BeautifulSoup(handle, "html.parser")
+
+    def test_finds_every_result_page(self):
+        links = clubpoints.result_links(
+            self.index_soup(), "https://results.solo2.com/index.php?dir=2026"
+        )
+        assert len(links) == 12
+        assert all(l.startswith("https://results.solo2.com/2026/") for l in links)
+
+    def test_relative_hrefs_are_resolved(self):
+        links = clubpoints.result_links(
+            self.index_soup(), "https://results.solo2.com/index.php?dir=2026"
+        )
+        assert "https://results.solo2.com/2026/01-25-2026-Class.htm" in links
+
+    def test_links_are_chronological_with_class_before_pax(self):
+        links = clubpoints.result_links(
+            self.index_soup(), "https://results.solo2.com/index.php?dir=2026"
+        )
+        names = [l.rsplit("/", 1)[-1] for l in links]
+        assert names[:4] == [
+            "01-25-2026-Class.htm",
+            "01-25-2026-PAX.htm",
+            "02-28-2026-Class.htm",
+            "02-28-2026-PAX.htm",
+        ]
+        assert names[-1] == "08-16-2026-PAX.htm"
+
+    def test_a_results_page_is_not_mistaken_for_an_index(self):
+        from bs4 import BeautifulSoup
+
+        with open(path("08-16-2026", "Class")) as handle:
+            soup = BeautifulSoup(handle, "html.parser")
+        assert clubpoints.result_links(soup, "https://results.solo2.com/x.htm") == []
+
+    def test_undated_links_are_ignored(self):
+        from bs4 import BeautifulSoup
+
+        soup = BeautifulSoup(
+            '<a href="notes.htm">notes</a><a href="2026/01-25-2026-PAX.htm">r</a>',
+            "html.parser",
+        )
+        links = clubpoints.result_links(soup, "https://x.test/index.php")
+        assert links == ["https://x.test/2026/01-25-2026-PAX.htm"]
+
+
+def test_event_columns_are_chronological_whatever_the_scrape_order(calclub_db):
+    for event in reversed(SEASON_2026):
+        clubpoints.scrape(calclub_db, path(event, "Class"))
+    assert clubpoints.event_dates(calclub_db) == SEASON_2026

@@ -1,0 +1,186 @@
+<!--
+Directory Index Script 
+(Salmun Kazerounian, Jon Rifkin - 2004)
+
+This script allows the user to view the contents
+of the script directory and those below.
+
+Input:  Current directory *relative* to script directory.
+        The directory is checked to insure that it
+        is *really* under the parent directory, thus
+        the user cannot manipulate the directory display
+        by including ".." in the input.
+Output: List of current directory contents with links
+        to files and links to this script with arguments
+        to view subdirectories.
+
+HISTORY
+2006-08-31 - Add SHOW_DOT=0 show files which start with '.' are not shown.
+-->
+
+
+
+
+<!-- HTML HEADER -->
+<html>
+<style type="text/css">
+@media screen and (max-width:600px){
+img       { border: 0; padding: 0px 10px 10px 0px; vertical-align: middle; }
+a         { font-family: monospace; text-decoration: none; margin-bottom: 2px;}
+a:link    { color: blue; }
+a:visited { color: blue; }
+a:hover   { background-color: #dddddd; }
+#pagefooter {
+	float: left;
+	font-weight: 200;
+	font-size: 18px;
+	padding-right: 10px;
+}
+#pageheader {
+	float: left;
+	font-weight: 200;
+	font-size: 25px;
+	padding-right: 10px;
+}
+#results {
+	float: left;
+	font-weight: 200;
+	font-size: 25;
+	width: 100%;
+}
+#results folders {
+	float: left;
+	font-weight: 200;
+	font-size: 25;
+	width: 50%;
+}
+#results files {
+	float: right;
+	font-weight: 200;
+	font-size: 25;
+	width: 50%;
+}
+table {border-collapse: separate; border-spacing: 5px; }
+td {font-size: 30; vertical-align: middle; padding: 5px 0px 5px 0px;}
+}
+
+@media screen and (min-width:601px){
+img       { border: 0; padding: 0px 5px 10px 0px; vertical-align: middle; }
+a         { font-family: monospace; text-decoration: none; margin-bottom: 2px;}
+a:link    { color: blue; }
+a:visited { color: blue; }
+a:hover   { background-color: #dddddd; }
+#pagefooter {
+	float: left;
+	font-weight: 200;
+	font-size: 18px;
+	padding-right: 10px;
+}
+#pageheader {
+	float: left;
+	font-weight: 200;
+	font-size: 18px;
+	padding-right: 10px;
+}
+#results {
+	float: left;
+	font-weight: 200;
+	font-size: 18;
+	width: 100%;
+}
+#results folders {
+	float: left;
+	font-weight: 200;
+	font-size: 25;
+	width: 50%;
+}
+#results files {
+	float: right;
+	font-weight: 200;
+	font-size: 25;
+	width: 50%;
+}
+table {border-collapse: separate; border-spacing: 0px; }
+td {font-size: 18; vertical-align: middle;}
+}
+</style>
+
+<title>Cal Club SCCA Autocross Results Archive</title>
+<meta name="keywords" content="autocross, scca, solo2"/>
+<meta name="robots" content="noindex">
+<meta name="description" content="Your destination for autocross in Southern California."/>
+<link rel="shortcut icon" href="https://static.wixstatic.com/media/2abe7c_e039fe3a5ad14de9844008073173c641%7Emv2.png/v1/fill/w_32%2Ch_32%2Clg_1%2Cusm_0.66_1.00_0.01/2abe7c_e039fe3a5ad14de9844008073173c641%7Emv2.png" type="image/png"/>
+<link rel="apple-touch-icon" href="https://static.wixstatic.com/media/2abe7c_e039fe3a5ad14de9844008073173c641%7Emv2.png/v1/fill/w_32%2Ch_32%2Clg_1%2Cusm_0.66_1.00_0.01/2abe7c_e039fe3a5ad14de9844008073173c641%7Emv2.png" type="image/png"/>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<div style="background-color:grey">
+	<br>
+	<a href="https://www.solo2.com"><img src="https://static.wixstatic.com/media/2abe7c_3ee5f0ec783d425996457bd5a7935f76~mv2.png/v1/fill/w_586,h_106,al_c,usm_0.66_1.00_0.01/2abe7c_3ee5f0ec783d425996457bd5a7935f76~mv2.png" width="350">
+	</a>
+	<br>
+	<br>
+</div>
+<br>
+<div id="pageheader">
+Event Run Order is <a href="/RunOrder">here</a><br>
+</div>
+
+<!-- LIST DIRS AND FILES -->
+<div id='results'><br><div id='folders'><i>Autocross Results for</i> :   <b>2026/</b><br/><br/>
+<table border='0'><tr valign='top'>
+<td>
+<a href="index.php?dir="><img src="http://web.uconn.edu/folder.open.gif">..</a>
+</td>
+</div>
+</table>
+</div><div id='files'><table border='0'><tr valign='top'>
+<tr><td>
+<a href="2026/01-25-2026-Class.htm"><img src="http://web.uconn.edu/file.gif">01-25-2026-Class.htm</a>
+</td></tr>
+<tr><td>
+<a href="2026/01-25-2026-PAX.htm"><img src="http://web.uconn.edu/file.gif">01-25-2026-PAX.htm</a>
+</td></tr>
+<tr><td>
+<a href="2026/02-28-2026-Class.htm"><img src="http://web.uconn.edu/file.gif">02-28-2026-Class.htm</a>
+</td></tr>
+<tr><td>
+<a href="2026/02-28-2026-PAX.htm"><img src="http://web.uconn.edu/file.gif">02-28-2026-PAX.htm</a>
+</td></tr>
+<tr><td>
+<a href="2026/04-12-2026-Class.htm"><img src="http://web.uconn.edu/file.gif">04-12-2026-Class.htm</a>
+</td></tr>
+<tr><td>
+<a href="2026/04-12-2026-PAX.htm"><img src="http://web.uconn.edu/file.gif">04-12-2026-PAX.htm</a>
+</td></tr>
+<tr><td>
+<a href="2026/04-25-2026-Class.htm"><img src="http://web.uconn.edu/file.gif">04-25-2026-Class.htm</a>
+</td></tr>
+<tr><td>
+<a href="2026/04-25-2026-PAX.htm"><img src="http://web.uconn.edu/file.gif">04-25-2026-PAX.htm</a>
+</td></tr>
+<tr><td>
+<a href="2026/07-12-2026-Class.htm"><img src="http://web.uconn.edu/file.gif">07-12-2026-Class.htm</a>
+</td></tr>
+<tr><td>
+<a href="2026/07-12-2026-PAX.htm"><img src="http://web.uconn.edu/file.gif">07-12-2026-PAX.htm</a>
+</td></tr>
+<tr><td>
+<a href="2026/08-16-2026-Class.htm"><img src="http://web.uconn.edu/file.gif">08-16-2026-Class.htm</a>
+</td></tr>
+<tr><td>
+<a href="2026/08-16-2026-PAX.htm"><img src="http://web.uconn.edu/file.gif">08-16-2026-PAX.htm</a>
+</td></tr>
+</table>
+</div>
+ 
+
+</div>
+<!--- Information to be displayed at the bottom of each page -->
+<div id="pagefooter">
+<br>
+Links: <a href="https://www.solo2.com">Cal Club SCCA Autocross Home Page</a>&nbsp; |&nbsp; <a href="/RunOrder">Event Run Order</a>
+<br>
+</div>
+</body>
+</html>

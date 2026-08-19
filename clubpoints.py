@@ -18,6 +18,7 @@ import re
 import sqlite3
 import sys
 from configparser import ConfigParser, NoOptionError, NoSectionError
+from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
@@ -291,8 +292,17 @@ def get_or_create_driver(connection, driver, car_number):
 
 
 def event_dates(connection):
+    """Every event in the season, oldest first.
+
+    Dates are stored MM-DD-YYYY, so they have to be reordered to YYYYMMDD to
+    sort. Without this the Event 1..N columns follow whatever order the results
+    were scraped in.
+    """
     rows = execute_read_query(
-        connection, "SELECT DISTINCT event_date FROM class_results"
+        connection,
+        "SELECT DISTINCT event_date FROM class_results "
+        "ORDER BY substr(event_date,7,4) || substr(event_date,1,2) "
+        "|| substr(event_date,4,2)",
     )
     return [row[0] for row in rows]
 
@@ -814,9 +824,41 @@ def load_soup(url):
         return BeautifulSoup(handle, "html.parser")
 
 
-def read_results(url):
+def result_links(soup, base_url):
+    """Result pages linked from a season index, oldest first.
+
+    Axware result files are named MM-DD-YYYY-Class.htm / -PAX.htm, so a page
+    that links to dated .htm files is an index rather than a results page.
+    """
+    seen, found = set(), []
+    for anchor in soup.find_all("a", href=True):
+        href = anchor["href"]
+        name = os.path.basename(href.split("?")[0].rstrip("/"))
+        if not name.lower().endswith((".htm", ".html")):
+            continue
+        match = DATE_PATTERN.search(name)
+        if match is None:
+            continue
+        url = urljoin(base_url, href)
+        if url in seen:
+            continue
+        seen.add(url)
+        found.append((match.group(), name, url))
+
+    def chronological(item):
+        date, name, _ = item
+        month, day, year = date.split("-")
+        # Class results before the PAX sheet for the same event, just to keep
+        # the order deterministic.
+        return (year, month, day, 0 if "class" in name.lower() else 1)
+
+    return [url for _, _, url in sorted(found, key=chronological)]
+
+
+def read_results(url, soup=None):
     """Load a results page and work out which event it is."""
-    soup = load_soup(url)
+    if soup is None:
+        soup = load_soup(url)
     event_date = get_event_date(soup.find_all("table")[0], source=url)
     return soup, event_date
 
@@ -1168,7 +1210,11 @@ def build_parser():
         description="Calculate SCCA regional club points from Axware results."
     )
     argparser.add_argument(
-        "-u", "--url", help="url to axware html or path to a local html file"
+        "-u",
+        "--url",
+        help="url to an axware results page, or to a season index listing them "
+        "(e.g. https://results.solo2.com/index.php?dir=2026), or a path to a "
+        "local html file",
     )
     argparser.add_argument(
         "-a",
@@ -1227,10 +1273,22 @@ def main(argv=None):
     # season is implied by the inputs where possible, so the common cases need
     # no --season flag at all.
     pending = None
+    queued = []
     implied = set()
     if args.url:
-        pending = read_results(args.url)
-        implied.add(season_year(pending[1]))
+        soup = load_soup(args.url)
+        queued = result_links(soup, args.url)
+        if queued:
+            # A season index: take the season from the linked filenames so the
+            # database can be opened before anything is fetched.
+            log.info("season index: %s result pages", len(queued))
+            for url in queued:
+                match = DATE_PATTERN.search(os.path.basename(url))
+                if match:
+                    implied.add(season_year(match.group()))
+        else:
+            pending = read_results(args.url, soup)
+            implied.add(season_year(pending[1]))
     if args.average and args.event_date:
         implied.add(season_year(args.event_date))
     if args.season:
@@ -1246,6 +1304,17 @@ def main(argv=None):
 
     if pending is not None:
         parse_results(connection, *pending)
+
+    failed = 0
+    for index, url in enumerate(queued, start=1):
+        log.info("[%s/%s] %s", index, len(queued), url)
+        try:
+            parse_results(connection, *read_results(url))
+        except Exception as exc:  # one bad page should not lose the rest
+            failed += 1
+            log.warning("could not read %s: %s", url, exc)
+    if failed:
+        log.warning("%s of %s pages failed; re-running is safe", failed, len(queued))
 
     if args.average:
         if not args.car_class or not args.event_date:

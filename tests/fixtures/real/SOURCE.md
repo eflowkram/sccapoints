@@ -14,3 +14,6 @@ Three different class layouts and three different PAX layouts across four events
 with `Total` landing at index 10, 11 or 12 depending on the export. That is why
 the parsers resolve columns by name from each table's header row instead of
 counting in from either end.
+
+`season-index-2026.html` is the season listing from
+<https://results.solo2.com/index.php?dir=2026>, used to test index discovery.

@@ -85,21 +85,27 @@ error.
 
 ### 1. Scrape results
 
-The database is created on first run. Feed it one results URL at a time:
+The database is created on first run. The quickest way is to point `-u` at a
+season index and let it fetch everything listed there:
 
 ```sh
-./clubpoints.py -u https://sdrscca.com/solo2/results/2022/event-02%202022-02-27-Final_Web.htm
+./clubpoints.py -u "https://results.solo2.com/index.php?dir=2026"
 ```
 
-A local `.html` file works too. Enter events in chronological order. It is
-easiest to save the URLs to a file, one per line, and loop:
+That finds every `MM-DD-YYYY-Class.htm` / `-PAX.htm` on the page, scrapes them
+oldest first, and writes `calclub_2026_points.db`. A page is treated as an index
+only when it links to dated results files; anything else is read as a single
+results page, so the original one-at-a-time forms still work:
 
 ```sh
-while read -r url; do ./clubpoints.py -u "$url"; done < sdr_urls
+./clubpoints.py -u https://results.solo2.com/2026/08-16-2026-Class.htm
+./clubpoints.py -u ./08-16-2026-Class.htm          # local file
+while read -r url; do ./clubpoints.py -u "$url"; done < urls   # your own list
 ```
 
-Keep two lists: one of driver (PAX) points URLs and one of class URLs.
-Re-scraping a URL you already have is a no-op, so a failed loop is safe to rerun.
+Re-scraping something already in the database is a no-op, so a failed or partial
+run is safe to repeat. If one page in an index fails, the rest still load and the
+failure is reported at the end.
 
 ### 2. Print standings
 
@@ -134,7 +140,7 @@ first. See `national_avg.sh` for a batch example.
 
 | Switch | Description |
 | --- | --- |
-| `-u`, `--url` | URL to scrape, or a path to a local HTML file |
+| `-u`, `--url` | URL of a results page or of a season index listing them, or a path to a local HTML file |
 | `-a`, `--average` | Car number of a driver who ran a national event. Requires `-n` and `-d` |
 | `-n`, `--name` | Class name, e.g. `CS`, `PAX`, `M1`. Also narrows `-c` to one class |
 | `-d`, `--event_date` | Event date as `MM-DD-YYYY` |
