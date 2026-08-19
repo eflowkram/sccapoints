@@ -450,3 +450,48 @@ def test_event_columns_are_chronological_whatever_the_scrape_order(calclub_db):
     for event in reversed(SEASON_2026):
         clubpoints.scrape(calclub_db, path(event, "Class"))
     assert clubpoints.event_dates(calclub_db) == SEASON_2026
+
+
+class TestTellingPaxAndClassSheetsApart:
+    """Table counts collide; the "Pax Pos." header does not."""
+
+    def soup(self, event, kind):
+        from bs4 import BeautifulSoup
+
+        with open(path(event, kind)) as handle:
+            return BeautifulSoup(handle, "html.parser")
+
+    @pytest.mark.parametrize("event", EVENTS)
+    def test_pax_sheets_route_to_the_pax_parser(self, event):
+        assert clubpoints.select_parser(self.soup(event, "PAX")) is (
+            clubpoints.driver_point_parser
+        )
+
+    @pytest.mark.parametrize("event", EVENTS)
+    def test_class_sheets_route_to_the_class_parser(self, event):
+        assert clubpoints.select_parser(self.soup(event, "Class")) is (
+            clubpoints.class_point_parser
+        )
+
+    def test_three_tables_is_ambiguous_by_count_alone(self):
+        # 2022 class and 2026 PAX both have three tables, and they must not
+        # route to the same parser.
+        assert len(self.soup("04-03-2022", "Class").find_all("table")) == 3
+        assert len(self.soup("01-25-2026", "PAX").find_all("table")) == 3
+
+    def test_a_short_pax_sheet_still_routes_correctly(self):
+        from bs4 import BeautifulSoup
+
+        # Only two timed entries: the old ">= 5 rows" tiebreak would have called
+        # this a class sheet.
+        soup = BeautifulSoup(
+            "<table><tr><td>Header 04-10-2022</td></tr></table>"
+            "<table><tr><td>Pax Pos.</td><td>Class</td><td>#</td><td>Driver</td>"
+            "<td>Car</td><td>Factor</td><td>Pax Time</td><td>Diff.</td>"
+            "<td>From 1st</td></tr>"
+            "<tr><td>1</td><td>CS</td><td>97</td><td>A B</td><td>c</td>"
+            "<td>*0.8</td><td>40.000</td><td>0</td><td>0</td></tr></table>"
+            "<table><tr><td>ttod</td></tr></table>",
+            "html.parser",
+        )
+        assert clubpoints.select_parser(soup) is clubpoints.driver_point_parser

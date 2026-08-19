@@ -706,7 +706,10 @@ def class_point_parser(connection, soup, event_date, mobile_format="standard"):
 
 
 def driver_point_parser(connection, soup, event_date):
-    pax_data = table_data(soup.find_all("table")[1])
+    index = pax_table_index(soup)
+    if index is None:
+        index = 1  # older exports without the "Pax Pos." header
+    pax_data = table_data(soup.find_all("table")[index])
     winner_time = None
     columns = None
     log.debug("parsing pax results")
@@ -797,8 +800,28 @@ def driver_point_parser(connection, soup, event_date):
         )
 
 
+def pax_table_index(soup):
+    """Index of the PAX results grid, or None if this is not a PAX sheet.
+
+    A PAX sheet heads its grid "Pax Pos."; a class sheet's second table is the
+    class index ("PAX | PAXL | SS | AS ..."). That header is what actually tells
+    the two apart -- table counts collide, since a 2022 class sheet and a 2026
+    PAX sheet both have three.
+    """
+    for index, table in enumerate(soup.find_all("table")):
+        rows = table_data(table)
+        if rows and rows[0] and rows[0][0].strip().lower().startswith("pax pos"):
+            return index
+    return None
+
+
 def select_parser(soup):
-    """Axware exports vary in table count; pick the parser matching the layout."""
+    """Pick the parser matching this export's layout."""
+    if pax_table_index(soup) is not None:
+        return driver_point_parser
+
+    # No PAX header: fall back to counting tables, which is how this was done
+    # before and still covers exports that head their grid differently.
     table_count = len(soup.find_all("table"))
     parsers = {
         2: driver_point_parser,
@@ -809,7 +832,7 @@ def select_parser(soup):
     if parser is None:
         sys.exit(f"Invalid Input: unrecognized layout with {table_count} tables")
     # A 3-table export is a PAX sheet when its second table is a full results
-    # grid rather than a short class header.
+    # grid rather than a short class index.
     if table_count == 3 and len(table_data(soup.find_all("table")[1])) >= 5:
         return driver_point_parser
     return parser

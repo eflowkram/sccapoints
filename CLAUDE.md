@@ -102,6 +102,11 @@ table's `Total` column lands at index 10, 11 or 12 depending on the export, and
 the PAX sheet has three shapes — two of them the same width with different
 meanings. Some events omit the date from the page header entirely.
 
+Telling a PAX sheet from a class sheet goes by the `Pax Pos.` header on its
+results grid, not by table count — counts collide, since a 2022 class sheet and a
+2026 PAX sheet both have three tables. The old count-plus-row-threshold rule is
+kept as a fallback for exports with no such header.
+
 So: **resolve columns by name from each table's header row**, never by counting
 in from either end. `class_columns()` and `pax_columns()` do this. A fixed
 "second to last column" rule reads the final run instead of the best time, which
