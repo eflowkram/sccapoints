@@ -1,12 +1,23 @@
-# calclub updates for the vegas tour based on the online rquests. 
+#!/usr/bin/env bash
+# Award the local average to Cal Club drivers who ran the Vegas tour instead of
+# the 04-03-2022 local event, per their online requests.
+#
+# Usage: -a <car number> -n <class> -d <MM-DD-YYYY>
+set -euo pipefail
 
-./clubpoints.py -d 04-03-2022 -n 0 -c PAX
-./clubpoints.py -d 04-03-2022 -n 3 -c PAX
-./clubpoints.py -d 04-03-2022 -n 187 -c PAX
-./clubpoints.py -d 04-03-2022 -n 87 -c PAXL
-./clubpoints.py -d 04-03-2022 -n 19 -c PAX
-./clubpoints.py -d 04-03-2022 -n 97 -c CS
-./clubpoints.py -d 04-03-2022 -n 80 -c STS
-./clubpoints.py -d 04-03-2022 -n 170 -c PAX
-./clubpoints.py -d 04-03-2022 -n 500 -c PAX
-./clubpoints.py -d 04-03-2022 -n 70 -c PAXL
+date="04-03-2022"
+
+while read -r car class; do
+    ./clubpoints.py -a "$car" -n "$class" -d "$date"
+done <<'ENTRIES'
+0   PAX
+3   PAX
+187 PAX
+87  PAXL
+19  PAX
+97  CS
+80  STS
+170 PAX
+500 PAX
+70  PAXL
+ENTRIES
