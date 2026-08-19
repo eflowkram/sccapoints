@@ -495,3 +495,65 @@ class TestTellingPaxAndClassSheetsApart:
             "html.parser",
         )
         assert clubpoints.select_parser(soup) is clubpoints.driver_point_parser
+
+
+class TestTwoTimesInOneCell:
+    """Some seasons write "scored / other" into the Total cell."""
+
+    @pytest.mark.parametrize(
+        "cell, expected",
+        [
+            ("39.163 /  31.839", "39.163"),   # CS: raw-scored, raw leads
+            ("31.151 / 36.349", "31.151"),    # PAX: indexed, indexed leads
+            ("39.466", "39.466"),             # single value, unchanged
+            ("DNS", "DNS"),
+            ("", ""),
+        ],
+    )
+    def test_takes_the_leading_value(self, cell, expected):
+        assert clubpoints.scoring_time(cell) == expected
+
+    def test_the_2024_export_parses_without_dropping_rows(self, calclub_db):
+        # Before this was handled, every row in this file was skipped as an
+        # unparseable time and whole events vanished from the standings.
+        clubpoints.scrape(
+            calclub_db, os.path.join(REAL, "01-28-2024-Class.htm")
+        )
+        rows = clubpoints.execute_read_query(
+            calclub_db, "SELECT count(1) FROM class_results"
+        )[0][0]
+        classes = clubpoints.execute_read_query(
+            calclub_db, "SELECT count(DISTINCT class) FROM class_results"
+        )[0][0]
+        assert rows > 70 and classes > 20
+
+    def test_raw_scored_class_uses_the_raw_time(self, calclub_db):
+        clubpoints.scrape(calclub_db, os.path.join(REAL, "01-28-2024-Class.htm"))
+        row = clubpoints.execute_read_query(
+            calclub_db,
+            "SELECT final_time FROM class_results JOIN drivers "
+            "ON drivers.id = class_results.driver_id "
+            "WHERE car_number = ? AND class = ?",
+            (97, "CS"),
+        )
+        assert row[0][0] == pytest.approx(39.163)
+
+    def test_indexed_class_uses_the_indexed_time(self, calclub_db):
+        clubpoints.scrape(calclub_db, os.path.join(REAL, "01-28-2024-Class.htm"))
+        row = clubpoints.execute_read_query(
+            calclub_db,
+            "SELECT final_time FROM class_results JOIN drivers "
+            "ON drivers.id = class_results.driver_id "
+            "WHERE car_number = ? AND class = ?",
+            (1461, "PAX"),
+        )
+        assert row[0][0] == pytest.approx(31.151)
+
+    def test_the_class_winner_still_scores_100(self, calclub_db):
+        clubpoints.scrape(calclub_db, os.path.join(REAL, "01-28-2024-Class.htm"))
+        rows = clubpoints.execute_read_query(
+            calclub_db,
+            "SELECT class, max(points) FROM class_results "
+            "WHERE class IN ('CS','DS','PAX') GROUP BY class",
+        )
+        assert rows and all(p == 100.0 for _, p in rows)

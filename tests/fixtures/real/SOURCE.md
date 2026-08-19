@@ -17,3 +17,10 @@ counting in from either end.
 
 `season-index-2026.html` is the season listing from
 <https://results.solo2.com/index.php?dir=2026>, used to test index discovery.
+
+`01-28-2024-Class.htm` carries two times in one `Total` cell, `"scored / other"`
+— the raw best and its indexed equivalent. The order flips by class: a raw-scored
+class such as CS leads with raw (`39.163 / 31.839`), an indexed class such as PAX
+leads with indexed (`31.151 / 36.349`). The leading value is always the one the
+class is ranked on. Its class header also records the season Cal Club scored PAX
+on the first three runs only.

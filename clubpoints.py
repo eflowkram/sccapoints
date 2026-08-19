@@ -569,6 +569,17 @@ def get_cone_dnf(table_row, run_cols=None):
     return cones, dnf
 
 
+def scoring_time(cell):
+    """The time a class is actually ranked on.
+
+    Some seasons put two times in one cell, "scored / other" -- the raw best and
+    its indexed equivalent. Which is which depends on the class (a raw-scored
+    class leads with raw, an indexed class leads with indexed), but the value the
+    class is ranked on always comes first, so take that.
+    """
+    return cell.split("/")[0].strip()
+
+
 def get_car_class(cc):
     """Collapse a combined-class entry (e.g. "PAX3") to its base class."""
     return next((prefix for prefix in CLASS_PREFIXES if cc.startswith(prefix)), cc)
@@ -645,7 +656,7 @@ def class_point_parser(connection, soup, event_date, mobile_format="standard"):
         if place is None:
             continue
 
-        result = item[total_col]
+        result = scoring_time(item[total_col])
         if result in ("DNS", ""):
             # Axware marks a no-show "DNS" and leaves the indexed time blank.
             log.debug("%s: no time recorded (%r), skipping row", context, result)
@@ -748,7 +759,7 @@ def driver_point_parser(connection, soup, event_date):
         if place is None:
             continue
 
-        result = item[columns["time"]]
+        result = scoring_time(item[columns["time"]])
         if result in ("DNS", ""):
             # Axware marks a no-show "DNS" and leaves the indexed time blank.
             log.debug("%s: no time recorded (%r), skipping row", context, result)
